@@ -52,7 +52,7 @@ var SEVERITY_BAR_COLOR={BLOCKER:'var(--purple)',CRITICAL:'var(--red)',MAJOR:'var
 
 function readmeBugCounts(){
  var counts={BLOCKER:README_SEED_COUNTS.BLOCKER,CRITICAL:README_SEED_COUNTS.CRITICAL,MAJOR:README_SEED_COUNTS.MAJOR,MINOR:README_SEED_COUNTS.MINOR};
- data.bugs.forEach(function(bug){if(counts[bug.severity]!==undefined)counts[bug.severity]++;});
+ getAllPatchBugs().forEach(function(bug){if(!data.simPatches[bug.id]&&counts[bug.severity]!==undefined)counts[bug.severity]++;});
  return counts;
 }
 
@@ -60,9 +60,9 @@ function renderReadme(){
  var counts=readmeBugCounts();
  var totalBugs=counts.BLOCKER+counts.CRITICAL+counts.MAJOR+counts.MINOR;
  var barMax=Math.max(counts.BLOCKER,counts.CRITICAL,counts.MAJOR,counts.MINOR,1);
- var logResolved=README_PATCH_LOG.reduce(function(s,p){return s+p.resolved;},0);
+ var fullChangelog=getFullChangelog();
+ var totalResolved=fullChangelog.reduce(function(s,p){return s+p.resolved;},0);
  var simResolved=Object.keys(data.simPatches).length;
- var totalResolved=logResolved+simResolved;
 
  var html='';
  html+='<p class="md-h1"># City Debugger</p>';
@@ -104,7 +104,7 @@ function renderReadme(){
  html+='<p style="color:#5b6885;font-size:11px">Public Domain — 도시는 모두의 것입니다.</p>';
 
  html+='<div class="md-footer"><p>$ git log --oneline | head -3</p>';
- README_PATCH_LOG.slice(0,3).forEach(function(p){
+ fullChangelog.slice(0,3).forEach(function(p){
   html+='<p><span class="ver">'+p.version.slice(1).replace(/\./g,'')+'</span> '+escapeHTML(p.title)+'</p>';
  });
  html+='</div>';
@@ -114,7 +114,7 @@ function renderReadme(){
 
 var changelogExpanded='v1.3.0';
 function renderChangelog(){
- $('#changelog-timeline').innerHTML='<div class="cl-line"></div>'+README_PATCH_LOG.map(function(log,idx){
+ $('#changelog-timeline').innerHTML='<div class="cl-line"></div>'+getFullChangelog().map(function(log,idx){
   var isOpen=changelogExpanded===log.version,isLatest=idx===0;
   var body=isOpen?'<div class="cl-body">'+log.changes.map(function(c){return '<p class="cl-change">'+escapeHTML(c)+'</p>';}).join('')+
    (log.resolved>0?'<p class="cl-resolved">📋 관련 제보 '+log.resolved+'건 해결'+(log.bugIds.length?' ('+log.bugIds.map(function(id){return '#'+id;}).join(', ')+')':'')+'</p>':'')+
@@ -135,7 +135,6 @@ $('#changelog-timeline').addEventListener('click',function(event){
  changelogExpanded=changelogExpanded===btn.dataset.changelog?null:btn.dataset.changelog;
  renderChangelog();
 });
-renderChangelog();
 function renderCompatibility(){
  $('#compat-list').innerHTML=data.compatibility.map(function(item){
   return '<article class="compat-card"><button class="delete" data-delete="compatibility" data-id="'+item.id+'" aria-label="'+escapeHTML(item.name)+' 삭제">삭제</button><span class="icon">'+escapeHTML(item.icon)+'</span><h3>'+escapeHTML(item.name)+'<strong>'+item.score+'%</strong></h3><p>'+escapeHTML(item.desc)+'</p><div class="bar" role="img" aria-label="'+escapeHTML(item.name)+' 호환성 '+item.score+' 퍼센트"><i style="width:'+item.score+'%"></i></div></article>';
@@ -163,7 +162,7 @@ function renderBugs(){
  renderReadme();
  renderHeatmap();
 }
-function renderAll(){renderReadme();renderCompatibility();renderHeatmap();renderBugs();renderPatch();}
+function renderAll(){renderReadme();renderChangelog();renderCompatibility();renderHeatmap();renderBugs();renderPatch();}
 
 document.querySelectorAll('[data-toggle]').forEach(function(button){button.addEventListener('click',function(){var form=$('#'+button.dataset.toggle);form.hidden=!form.hidden;});});
 $('#compat-form').addEventListener('submit',function(event){event.preventDefault();var icon=$('#compat-icon').value.trim(),name=$('#compat-name').value.trim(),score=$('#compat-score').value,desc=$('#compat-desc').value.trim();if(!required([icon,name,score,desc],'호환성 항목의 모든 값을 입력해주세요.'))return;if(Number(score)<0||Number(score)>100){alert('점수는 0부터 100 사이로 입력해주세요.');return;}data.compatibility.push({id:makeId('c'),icon:icon,name:name,score:Number(score),desc:desc});save();renderCompatibility();event.target.reset();event.target.hidden=true;});
@@ -272,7 +271,7 @@ $('#bug-form').addEventListener('submit',function(event){
  if(!required([location,line,type,detail],'버그 리포트의 모든 값을 입력해주세요.'))return;
  var rule=severityRules[type],date=new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  data.bugs.unshift({id:makeId('b'),location:location,line:line,type:type,detail:detail,severity:rule[0],reason:rule[1],date:date,reproductions:0});
- save();renderBugs();event.target.reset();$('#logs').scrollIntoView({behavior:'smooth'});alert(rule[0]+' 심각도로 버그가 등록되었습니다.');
+ save();renderBugs();renderPatch();event.target.reset();$('#logs').scrollIntoView({behavior:'smooth'});alert(rule[0]+' 심각도로 버그가 등록되었습니다.');
 });
 
 // ── 패치 제안 ─────────────────────────────────────────────────────────
@@ -336,6 +335,61 @@ function getAllPatchBugs(){
   return {id:b.id,location:b.location,type:USER_TYPE_MAP[b.type],severity:b.severity,reportedAt:b.date};
  });
  return PATCH_SEED_BUGS.concat(userBugs);
+}
+
+// ── 패치 ↔ Changelog ↔ Known Bugs 연동 ─────────────────────────────
+function parseVersion(v){return v.replace(/^v/,'').split('.').map(Number);}
+function versionToStr(arr){return 'v'+arr.join('.');}
+function getLatestVersion(){
+ var versions=README_PATCH_LOG.map(function(p){return p.version;});
+ Object.keys(data.simPatches).forEach(function(id){if(data.simPatches[id].version)versions.push(data.simPatches[id].version);});
+ return versions.map(parseVersion).reduce(function(max,v){
+  if(!max)return v;
+  if(v[0]!==max[0])return v[0]>max[0]?v:max;
+  if(v[1]!==max[1])return v[1]>max[1]?v:max;
+  return v[2]>max[2]?v:max;
+ },null);
+}
+function nextVersion(){var v=getLatestVersion();v[2]++;return versionToStr(v);}
+function isoDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function buildPatchMeta(bug,plan,planId,score){
+ var related=getAllPatchBugs().filter(function(b){return b.location===bug.location&&b.type===bug.type;});
+ var typeLabel=PATCH_TYPE_LABEL[bug.type]||bug.type;
+ return {
+  planId:planId,score:score,
+  version:nextVersion(),
+  date:isoDate(new Date()),
+  title:bug.location+' '+typeLabel+' → '+(plan?plan.title:'패치')+' 완료',
+  severity:bug.severity,
+  resolved:related.length,
+  bugIds:related.map(function(b){return b.id;})
+ };
+}
+function ensureSimPatchMeta(){
+ var migrated=false;
+ Object.keys(data.simPatches).forEach(function(bugId){
+  var p=data.simPatches[bugId];
+  if(p.version)return;
+  var bug=getAllPatchBugs().filter(function(b){return b.id===bugId;})[0];
+  if(!bug){delete data.simPatches[bugId];migrated=true;return;}
+  var plan=(PATCH_PLANS[bug.type]||[]).filter(function(pl){return pl.id===p.planId;})[0];
+  data.simPatches[bugId]=buildPatchMeta(bug,plan,p.planId,p.score);
+  migrated=true;
+ });
+ if(migrated)save();
+}
+function getFullChangelog(){
+ ensureSimPatchMeta();
+ var dynamic=Object.keys(data.simPatches).map(function(bugId){
+  var p=data.simPatches[bugId];
+  return {version:p.version,date:p.date,title:p.title,severity:p.severity,resolved:p.resolved,changes:[p.title],bugIds:p.bugIds};
+ });
+ return README_PATCH_LOG.concat(dynamic).sort(function(a,b){
+  var va=parseVersion(a.version),vb=parseVersion(b.version);
+  if(va[0]!==vb[0])return vb[0]-va[0];
+  if(va[1]!==vb[1])return vb[1]-va[1];
+  return vb[2]-va[2];
+ });
 }
 
 function animateCount(el,to){
@@ -630,13 +684,16 @@ document.body.addEventListener('click',function(event){
  if(applyBtn){
   var bid=applyBtn.dataset.applyBug,pid=applyBtn.dataset.applyPlan,score=parseInt(applyBtn.dataset.applyScore)||0;
   if(!data.simPatches[bid]){
-   data.simPatches[bid]={planId:pid,score:score};
+   var bug=getAllPatchBugs().filter(function(b){return b.id===bid;})[0];
+   var plan=(PATCH_PLANS[bug.type]||[]).filter(function(p){return p.id===pid;})[0];
+   data.simPatches[bid]=buildPatchMeta(bug,plan,pid,score);
    patchShowAfter=true;
    save();
    var b2=getAllPatchBugs().filter(function(b){return b.id===bid;})[0];
    if(b2)renderPatchDetail(b2);
    renderPatchSummary();
    renderReadme();
+   renderChangelog();
   }
   return;
  }
@@ -649,6 +706,7 @@ document.body.addEventListener('click',function(event){
   if(b3)renderPatchDetail(b3);
   renderPatchSummary();
   renderReadme();
+  renderChangelog();
   return;
  }
  var svgTgl=event.target.closest('[data-svg-toggle]');
