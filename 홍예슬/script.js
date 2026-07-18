@@ -97,19 +97,84 @@ document.body.addEventListener('click',function(event){
  if(reproduce){var bug=data.bugs.find(function(item){return item.id===reproduce.dataset.reproduce;});if(bug){bug.reproductions=(bug.reproductions||0)+1;save();renderBugs();}}
 });
 
-var stations={'1번 역':['1호선','2호선'],'2번 역':['1호선','2호선','3호선'],'3번 역':['1호선','3호선']};
+var STATIONS={
+ A:{id:'A',name:'신도림역',line:1,hasElevator:true,x:60,y:80},
+ B:{id:'B',name:'구로역',line:1,hasElevator:true,x:175,y:80},
+ C1:{id:'C1',name:'대림역',line:1,hasElevator:true,x:290,y:80,isTransfer:true},
+ D:{id:'D',name:'영등포역',line:1,hasElevator:false,x:405,y:80},
+ E:{id:'E',name:'여의도역',line:1,hasElevator:true,x:520,y:80},
+ F:{id:'F',name:'합정역',line:2,hasElevator:true,x:60,y:210},
+ G:{id:'G',name:'홍대입구역',line:2,hasElevator:true,x:175,y:210},
+ C2:{id:'C2',name:'대림역',line:2,hasElevator:true,x:290,y:210,isTransfer:true},
+ H:{id:'H',name:'노들역',line:2,hasElevator:true,x:405,y:210}
+};
+var EDGES=[
+ {id:'e1',from:'A',to:'B',line:1},
+ {id:'e2',from:'B',to:'C1',line:1},
+ {id:'e3',from:'C1',to:'D',line:1},
+ {id:'e4',from:'D',to:'E',line:1},
+ {id:'e5',from:'F',to:'G',line:2},
+ {id:'e6',from:'G',to:'C2',line:2},
+ {id:'e7',from:'C2',to:'H',line:2},
+ {id:'t1',from:'C1',to:'C2',line:'transfer',isTransfer:true}
+];
+var LINE_COLOR={1:'#3b82f6',2:'#22c55e',transfer:'#6b7280'};
+var LINE_LABEL={1:'1호선',2:'2호선'};
+var stationLines={};
+Object.values(STATIONS).forEach(function(s){
+ if(!stationLines[s.name])stationLines[s.name]=[];
+ var label=LINE_LABEL[s.line];
+ if(stationLines[s.name].indexOf(label)===-1)stationLines[s.name].push(label);
+});
 var risks=['엘리베이터 또는 리프트 이용 불가','출입문·개찰구 이용이 어려움','역무원이나 경비원을 찾을 수 없음','환승 통로가 막혀 있음','사람이 너무 많아 이동이 어려움','휠체어·유모차 이동 경로를 모르겠음'];
 var selection={station:'',line:'',risk:''};
-$('#station-map').innerHTML=Object.keys(stations).map(function(station){return '<button class="station" type="button" data-station="'+station+'" aria-label="'+station+'">'+station.charAt(0)+'</button>';}).join('');
+function renderStationMap(){
+ var edgesSVG=EDGES.map(function(edge){
+  var s=STATIONS[edge.from],e=STATIONS[edge.to];
+  var stroke=edge.isTransfer?LINE_COLOR.transfer:LINE_COLOR[edge.line];
+  return '<line x1="'+s.x+'" y1="'+s.y+'" x2="'+e.x+'" y2="'+e.y+'" stroke="'+stroke+'" stroke-width="'+(edge.isTransfer?2:3)+'" stroke-dasharray="'+(edge.isTransfer?'6 4':'none')+'" stroke-linecap="round"/>'+
+   (edge.isTransfer?'<text x="'+((s.x+e.x)/2)+'" y="'+((s.y+e.y)/2-8)+'" font-size="12" text-anchor="middle">⚡</text>':'');
+ }).join('');
+ var nodesSVG=Object.values(STATIONS).map(function(s){
+  var active=selection.station===s.name;
+  var fill=active?'#28447b':'#11192c',stroke=active?'#5adfff':LINE_COLOR[s.line],sw=active?4:2;
+  var icon=s.hasElevator?s.id.replace('C1','C').replace('C2','C'):'❌';
+  var labelY=s.y<150?s.y-26:s.y+34,transferLabelY=s.y<150?s.y-14:s.y+45;
+  return '<g class="station-node" data-station-name="'+s.name+'" tabindex="0" role="button" aria-label="'+s.name+'">'+
+   '<circle cx="'+s.x+'" cy="'+s.y+'" r="20" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'"/>'+
+   '<text x="'+s.x+'" y="'+(s.y+5)+'" text-anchor="middle" font-size="12" font-family="monospace" font-weight="bold" fill="#d1fae5">'+icon+'</text>'+
+   '<text x="'+s.x+'" y="'+labelY+'" text-anchor="middle" font-size="10" font-family="monospace" fill="'+(active?'#5adfff':'#9ca3af')+'">'+s.name+'</text>'+
+   (s.isTransfer?'<text x="'+s.x+'" y="'+transferLabelY+'" text-anchor="middle" font-size="9" fill="#a78bfa">환승</text>':'')+
+   '</g>';
+ }).join('');
+ $('#station-map').innerHTML='<svg viewBox="0 0 580 300" class="subway-svg">'+
+  '<text x="12" y="70" font-size="11" font-family="monospace" fill="'+LINE_COLOR[1]+'">1호선</text>'+
+  '<text x="12" y="200" font-size="11" font-family="monospace" fill="'+LINE_COLOR[2]+'">2호선</text>'+
+  edgesSVG+nodesSVG+'</svg>';
+}
+renderStationMap();
 $('#risk-list').innerHTML=risks.map(function(risk,index){return '<button class="risk" type="button" data-risk="'+risk+'">'+String(index+1).padStart(2,'0')+' · '+risk+'</button>';}).join('');
 function updateStep(){var count=[selection.station,selection.line,selection.risk].filter(Boolean).length;$('#step').textContent='STEP '+Math.min(count+1,3)+' / 3';}
-$('#station-map').addEventListener('click',function(event){var button=event.target.closest('[data-station]');if(!button)return;selection.station=button.dataset.station;selection.line='';document.querySelectorAll('.station').forEach(function(item){item.classList.toggle('active',item===button);});$('#station-help').textContent='현재 위치: '+selection.station;$('#line-list').innerHTML=stations[selection.station].map(function(line){return '<button type="button" data-line="'+line+'">'+line+'</button>';}).join('');updateStep();recommend();});
+function selectStation(name){
+ selection.station=name;selection.line='';
+ renderStationMap();
+ $('#station-help').textContent='현재 위치: '+selection.station;
+ $('#line-list').innerHTML=stationLines[selection.station].map(function(line){return '<button type="button" data-line="'+line+'">'+line+'</button>';}).join('');
+ updateStep();recommend();
+}
+$('#station-map').addEventListener('click',function(event){var node=event.target.closest('[data-station-name]');if(!node)return;selectStation(node.dataset.stationName);});
+$('#station-map').addEventListener('keydown',function(event){if(event.key!=='Enter'&&event.key!==' ')return;var node=event.target.closest('[data-station-name]');if(!node)return;event.preventDefault();selectStation(node.dataset.stationName);});
 $('#line-list').addEventListener('click',function(event){var button=event.target.closest('[data-line]');if(!button)return;selection.line=button.dataset.line;$('#line-list').querySelectorAll('button').forEach(function(item){item.classList.toggle('active',item===button);});updateStep();recommend();});
 $('#risk-list').addEventListener('click',function(event){var button=event.target.closest('[data-risk]');if(!button)return;selection.risk=button.dataset.risk;$('#risk-list').querySelectorAll('button').forEach(function(item){item.classList.toggle('active',item===button);});updateStep();recommend();});
 var routes={
- '1번 역':{'1호선':'2호선 연결 통로를 통해 2번 역 방향으로 우회','2호선':'1호선 환승 구간의 넓은 개찰구 이용'},
- '2번 역':{'1호선':'2호선 경사로 또는 3호선 엘리베이터 동선 이용','2호선':'1호선 경사로를 거쳐 지상 출구로 이동','3호선':'1호선 환승 구간의 대체 엘리베이터 이용'},
- '3번 역':{'1호선':'3호선 연결 엘리베이터를 이용해 우회','3호선':'1호선 완만한 경사로를 통해 반대편 출구 이용'}};
+ '신도림역':{'1호선':'구로역 방향 저상 통로와 엘리베이터 동선 이용'},
+ '구로역':{'1호선':'신도림역 또는 대림역 방향 엘리베이터 동선 확인'},
+ '대림역':{'1호선':'2호선 환승 통로가 막힌 경우 지상 출구를 통한 우회 이용','2호선':'1호선 환승 통로 대신 지상 경유 우회 경로 이용'},
+ '영등포역':{'1호선':'역 자체 엘리베이터가 없어 여의도역 또는 대림역에서 대체 경로 이용'},
+ '여의도역':{'1호선':'인근 저상 출입구 또는 대림역 방향 우회'},
+ '합정역':{'2호선':'홍대입구역 방향 엘리베이터 동선 이용'},
+ '홍대입구역':{'2호선':'합정역 또는 대림역 방향 대체 동선 이용'},
+ '노들역':{'2호선':'대림역 방향 엘리베이터 동선 이용'}};
 function recommend(){
  if(!selection.station||!selection.line||!selection.risk)return;
  var critical=/이용 불가|막혀/.test(selection.risk),major=/사람이 너무|개찰구/.test(selection.risk),severity=critical?'CRITICAL':major?'MAJOR':'MINOR';
