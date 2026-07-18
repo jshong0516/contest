@@ -44,13 +44,13 @@
 </div>
 <header class="topbar">
   <a class="logo" href="#home">&lt;/&gt; CITY_DEBUGGER</a>
-  <nav aria-label="주요 메뉴"><a href="#readme">README</a><a href="#diagnose">DEBUG</a><a href="#report">REPORT</a><a href="#patch">PATCH</a></nav>
-  <span class="online">● SYSTEM ONLINE</span>
+  <nav aria-label="주요 메뉴"><a href="#readme">README</a><a href="#diagnose">진단</a><a href="#report">제보</a><a href="#patch">패치</a></nav>
+  <span class="online">● 시스템 정상 작동</span>
 </header>
 <main id="main">
   <section class="hero" id="home">
     <div>
-      <p class="kicker">OPEN SOURCE CITY · BUILD 2026</p>
+      <p class="kicker">오픈소스 시티 · BUILD 2026</p>
       <h1>City <span>Debugger</span></h1>
       <h2>도시는 아직 개발 중이다.<br>우리 모두가 도시의 개발자입니다.</h2>
       <p class="lead">도시를 하나의 소프트웨어로 바라봅니다. 교통약자는 도움을 기다리는 대상이 아니라 도시의 버그를 가장 먼저 발견하는 디버거입니다. 도시가 어떤 상황을 수용하지 못하는 순간 누구나 교통약자가 됩니다. 우리는 도시의 버그를 발견하고, 기록하고, 계속 업데이트합니다.</p>
@@ -70,76 +70,48 @@ _</pre>
     </div>
   </section>
 
-  <section id="readme">
-    <div class="section-title"><div><p class="kicker">PROJECT OVERVIEW</p><h2>CITY README.md</h2></div><button type="button" data-toggle="readme-form">README 수정</button></div>
-    <div class="readme">
-      <div class="readme-copy"><p class="file"># CITY / README.md</p><h3>모두를 수용할 때까지, 도시는 계속 업데이트됩니다.</h3><p id="readme-description"></p>
-        <form id="readme-form" hidden>
-          <label>Version<input id="readme-version" required></label>
-          <label>Last Updated<input id="readme-updated" required></label>
-          <label class="full">README 설명<textarea id="readme-text" rows="3" required></textarea></label>
-          <button class="primary full">저장</button>
-        </form>
-      </div>
-      <dl class="stats">
-        <div><dt>Version</dt><dd id="stat-version"></dd></div>
-        <div><dt>Known Bugs</dt><dd id="stat-bugs"></dd></div>
-        <div><dt>Reproduced</dt><dd id="stat-reproduced"></dd></div>
-        <div><dt>Last Updated</dt><dd id="stat-updated"></dd></div>
-      </dl>
-    </div>
-  </section>
-
   <section>
-    <div class="section-title"><div><p class="kicker">MOBILITY SUPPORT MATRIX</p><h2>Compatibility Test</h2><p>도시가 다양한 이동 상황을 얼마나 잘 지원하는지 테스트합니다.</p></div><button type="button" data-toggle="compat-form">+ 항목 추가</button></div>
+    <div class="section-title"><div><p class="kicker">이동 지원 매트릭스</p><h2>호환성 테스트</h2><p>도시가 다양한 이동 상황을 얼마나 잘 지원하는지 테스트합니다.</p></div><button type="button" data-toggle="compat-form">+ 항목 추가</button></div>
     <form id="compat-form" class="inline-form" hidden>
       <label>아이콘<input id="compat-icon" placeholder="예: 🦯" required></label><label>대상 이름<input id="compat-name" placeholder="예: White Cane" required></label><label>점수<input id="compat-score" type="number" min="0" max="100" required></label><label>설명<input id="compat-desc" required></label><button class="primary full">추가</button>
     </form>
     <div id="compat-list" class="compat-grid"></div>
   </section>
 
-  <section class="two-column">
-    <div>
-      <div class="section-title"><div><p class="kicker">CHANGELOG</p><h2>Patch Notes</h2></div><button type="button" data-toggle="patch-form">+ 패치 추가</button></div>
-      <form id="patch-form" class="inline-form" hidden><label>버전<input id="patch-version" placeholder="v1.5.0" required></label><label>상태<select id="patch-status"><option>DEPLOYED</option><option>PENDING</option></select></label><label class="full">제목<input id="patch-title" required></label><label class="full">설명<textarea id="patch-desc" required></textarea></label><button class="primary full">추가</button></form>
-      <div id="patch-list" class="stack"></div>
-    </div>
-    <div>
-      <div class="section-title"><div><p class="kicker">ISSUE DENSITY</p><h2>Bug Heatmap</h2></div><button type="button" data-toggle="heat-form">+ 장소 추가</button></div>
-      <form id="heat-form" class="inline-form" hidden><label>장소<input id="heat-place" required></label><label>버그 수<input id="heat-count" type="number" min="0" required></label><label class="full">설명<input id="heat-desc" required></label><button class="primary full">추가</button></form>
-      <div id="heat-list" class="panel"></div>
-    </div>
-  </section>
-
   <section class="diagnose" id="diagnose">
-    <div class="section-title"><div><p class="kicker">LIVE DEBUG CONSOLE</p><h2>현재 이동 문제 진단</h2><p>역, 호선, 문제 상황을 선택하면 규칙 기반 해결 경로를 제안합니다.</p></div><span class="step" id="step">STEP 1 / 3</span></div>
+    <div class="section-title"><div><p class="kicker">실시간 디버그 콘솔</p><h2>현재 이동 문제 진단</h2><p>역, 호선, 문제 상황을 선택하면 규칙 기반 해결 경로를 제안합니다.</p></div><span class="step" id="step">STEP 1 / 3</span></div>
     <div class="debug-grid">
       <div class="panel debug-inputs">
         <fieldset><legend><b>01</b> 현재 역 선택</legend><div id="station-map" class="station-map"></div><p id="station-help" class="help">역을 선택해주세요.</p></fieldset>
         <fieldset><legend><b>02</b> 이용 호선 선택</legend><div id="line-list" class="chips"><span class="help">역을 먼저 선택해주세요.</span></div></fieldset>
         <fieldset><legend><b>03</b> 위험 상황 선택</legend><div id="risk-list" class="risk-list"></div></fieldset>
       </div>
-      <aside id="recommendation" class="panel recommendation" aria-live="polite"><div class="ai-title"><span>AI</span><div><small>RULE-BASED ASSISTANT</small><h3>AI 해결 추천</h3></div></div><div class="empty"><b>{ }</b><p>모든 조건을 선택하면<br>추천 결과가 표시됩니다.</p></div></aside>
+      <aside id="recommendation" class="panel recommendation" aria-live="polite"><div class="ai-title"><span>AI</span><div><small>규칙 기반 어시스턴트</small><h3>AI 해결 추천</h3></div></div><div class="empty"><b>{ }</b><p>모든 조건을 선택하면<br>추천 결과가 표시됩니다.</p></div></aside>
     </div>
   </section>
 
   <section id="report">
-    <p class="kicker">ISSUE TRACKER</p><h2>Bug Report</h2><p class="muted">발견한 도시의 버그를 기록하면 AI 규칙이 심각도와 판단 근거를 자동으로 붙입니다.</p>
+    <p class="kicker">이슈 트래커</p><h2>버그 제보</h2><p class="muted">발견한 도시의 버그를 기록하면 AI 규칙이 심각도와 판단 근거를 자동으로 붙입니다.</p>
     <div class="report-grid">
       <form id="bug-form" class="panel report-form">
         <label>버그 발생 위치<input id="bug-location" placeholder="예: 2번 역 환승 통로" required></label>
-        <label>호선<select id="bug-line" required><option value="">호선 선택</option><option>1호선</option><option>2호선</option><option>3호선</option><option>해당 없음</option></select></label>
+        <label>호선<select id="bug-line" required><option value="">호선 선택</option><option>1호선</option><option>2호선</option><option>해당 없음</option></select></label>
         <label class="full">버그 유형<select id="bug-type" required><option value="">유형 선택</option><option>계단만 존재함</option><option>엘리베이터 고장</option><option>개찰구가 좁음</option><option>짧은 계단 2~3개 존재</option><option>안내 표지판 부족</option><option>혼잡으로 이동 어려움</option></select></label>
         <label class="full">상세 설명<textarea id="bug-detail" rows="4" required></textarea></label><button class="primary full">버그 리포트 제출 →</button>
       </form>
-      <aside class="panel severity-guide"><p class="file">// AI SEVERITY RULES</p><h3>자동 심각도 판단</h3><div><span class="badge critical">CRITICAL</span><p>독립적인 이동이 불가능한 구조</p></div><div><span class="badge major">MAJOR</span><p>통과가 어렵고 위험이 커질 수 있음</p></div><div><span class="badge minor">MINOR</span><p>이동 차단은 아니지만 불편과 위험 발생</p></div></aside>
+      <aside class="panel severity-guide"><p class="file">// AI 심각도 규칙</p><h3>자동 심각도 판단</h3><div><span class="badge critical">CRITICAL</span><p>독립적인 이동이 불가능한 구조</p></div><div><span class="badge major">MAJOR</span><p>통과가 어렵고 위험이 커질 수 있음</p></div><div><span class="badge minor">MINOR</span><p>이동 차단은 아니지만 불편과 위험 발생</p></div></aside>
     </div>
   </section>
 
-  <section id="logs"><div class="section-title"><div><p class="kicker">REPRODUCTION DATABASE</p><h2>Bug Reproduction Log</h2></div><span class="step" id="issue-count"></span></div><div id="bug-list" class="stack"></div></section>
+  <section id="heatmap">
+    <div class="section-title"><div><p class="kicker">이슈 밀집도</p><h2>버그 히트맵</h2><p>버그 제보에 접수된 위치를 실시간으로 집계합니다.</p></div></div>
+    <div id="heat-list" class="panel"></div>
+  </section>
+
+  <section id="logs"><div class="section-title"><div><p class="kicker">재현 데이터베이스</p><h2>버그 재현 로그</h2></div><span class="step" id="issue-count"></span></div><div id="bug-list" class="stack"></div></section>
 
   <section id="patch">
-    <div class="section-title"><div><p class="kicker">BUG PATCHER · SIMULATION</p><h2>패치 제안</h2><p>접근성 버그를 선택하고 개선 시뮬레이션을 적용해보세요.</p></div></div>
+    <div class="section-title"><div><p class="kicker">버그 패처 · 시뮬레이션</p><h2>패치 제안</h2><p>접근성 버그를 선택하고 개선 시뮬레이션을 적용해보세요.</p></div></div>
     <div class="patch-stats">
       <div class="patch-stat"><span id="patch-total" class="stat-num">0</span><small>총 버그</small></div>
       <div class="patch-stat is-green"><span id="patch-applied" class="stat-num">0</span><small>패치 적용</small></div>
@@ -149,6 +121,25 @@ _</pre>
     <div id="patch-detail-view" hidden>
       <button id="patch-back" class="patch-back-btn" type="button">← 목록으로</button>
       <div id="patch-detail-inner"></div>
+    </div>
+  </section>
+
+  <section id="readme">
+    <div class="section-title"><div><p class="kicker">프로젝트 개요</p><h2>CITY README.md</h2></div></div>
+    <div class="terminal readme-terminal">
+      <div class="terminal-bar"><i></i><i></i><i></i><span>CITY_README.md</span></div>
+      <div id="readme-content" class="md-doc"></div>
+    </div>
+  </section>
+
+  <section id="changelog">
+    <div class="section-title"><div><p class="kicker">릴리스 타임라인</p><h2>패치 이력</h2></div></div>
+    <div class="terminal readme-terminal">
+      <div class="terminal-bar"><i></i><i></i><i></i><span>CHANGELOG.md</span></div>
+      <div class="md-doc">
+        <p class="md-h1"># Changelog</p>
+        <div id="changelog-timeline" class="changelog-timeline"></div>
+      </div>
     </div>
   </section>
 </main>
