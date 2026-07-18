@@ -44,7 +44,7 @@
 </div>
 <header class="topbar">
   <a class="logo" href="#home">&lt;/&gt; CITY_DEBUGGER</a>
-  <nav aria-label="주요 메뉴"><a href="#readme">README</a><a href="#diagnose">DEBUG</a><a href="#report">REPORT</a></nav>
+  <nav aria-label="주요 메뉴"><a href="#readme">README</a><a href="#diagnose">DEBUG</a><a href="#report">REPORT</a><a href="#patch">PATCH</a></nav>
   <span class="online">● SYSTEM ONLINE</span>
 </header>
 <main id="main">
@@ -137,6 +137,20 @@ _</pre>
   </section>
 
   <section id="logs"><div class="section-title"><div><p class="kicker">REPRODUCTION DATABASE</p><h2>Bug Reproduction Log</h2></div><span class="step" id="issue-count"></span></div><div id="bug-list" class="stack"></div></section>
+
+  <section id="patch">
+    <div class="section-title"><div><p class="kicker">BUG PATCHER · SIMULATION</p><h2>패치 제안</h2><p>접근성 버그를 선택하고 개선 시뮬레이션을 적용해보세요.</p></div></div>
+    <div class="patch-stats">
+      <div class="patch-stat"><span id="patch-total" class="stat-num">0</span><small>총 버그</small></div>
+      <div class="patch-stat is-green"><span id="patch-applied" class="stat-num">0</span><small>패치 적용</small></div>
+      <div class="patch-stat is-blue"><span id="patch-score" class="stat-num">0</span><small>개선 점수</small></div>
+    </div>
+    <div id="patch-list-view"><div id="patch-bug-list" class="stack"></div></div>
+    <div id="patch-detail-view" hidden>
+      <button id="patch-back" class="patch-back-btn" type="button">← 목록으로</button>
+      <div id="patch-detail-inner"></div>
+    </div>
+  </section>
 </main>
 <footer><b>&lt;/&gt; CITY_DEBUGGER</b><p>도시는 완성품이 아닙니다. 발견하고, 기록하고, 함께 업데이트합니다.</p></footer>
 </body></html>
