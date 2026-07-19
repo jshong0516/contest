@@ -369,9 +369,9 @@ function ensureSimPatchMeta(){
  var migrated=false;
  Object.keys(data.simPatches).forEach(function(bugId){
   var p=data.simPatches[bugId];
-  if(p.version)return;
   var bug=getAllPatchBugs().filter(function(b){return b.id===bugId;})[0];
   if(!bug){delete data.simPatches[bugId];migrated=true;return;}
+  if(p.version)return;
   var plan=(PATCH_PLANS[bug.type]||[]).filter(function(pl){return pl.id===p.planId;})[0];
   data.simPatches[bugId]=buildPatchMeta(bug,plan,p.planId,p.score);
   migrated=true;
